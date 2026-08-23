@@ -16,7 +16,7 @@ from functools import lru_cache
 import jieba
 import pandas as pd
 
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+# 同目录下直接导入 config 和 utils（部署时已复制到同级）
 import config
 import utils
 
