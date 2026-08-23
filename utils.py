@@ -1,10 +1,11 @@
 # -*- coding: utf-8 -*-
 """
 utils.py —— 公共工具模块（停用词表、数据加载、文本处理、字体配置）
-所有脚本统一引用，避免重复定义。
+自动探测系统可用中文字体，零配置、零文件依赖。
 """
 import os
 import re
+import subprocess
 from collections import Counter
 
 import jieba
@@ -106,8 +107,47 @@ def find_chinese_font():
     return None
 
 
+def _detect_chinese_font():
+    """
+    运行时自动探测系统安装的第一个中文字体（fontconfig fc-list）。
+    返回字体家族名字符串，找不到返回 None。
+    """
+    try:
+        # fc-list :lang=zh 输出类似：
+        # /usr/share/fonts/opentype/noto/NotoSansCJK-Regular.ttc: Noto Sans CJK SC:style=Regular
+        out = subprocess.check_output(
+            ["fc-list", ":lang=zh", "family"],
+            stderr=subprocess.DEVNULL,
+            text=True,
+            timeout=3,
+        )
+        for line in out.splitlines():
+            family = line.split(":")[0].strip()
+            if family:
+                return family
+    except Exception:
+        pass
+    return None
+
+
 def setup_matplotlib():
+    """
+    自动探测中文字体 → 找到用找到的，找不到回退 Noto Sans CJK SC → 再不行用 DejaVu Sans（不支持中文但不报错）。
+    """
     import matplotlib.pyplot as plt
-    plt.rcParams["font.family"] = "Noto Sans CJK SC"
+
+    font_family = _detect_chinese_font()
+    if font_family:
+        plt.rcParams["font.family"] = font_family
+        print(f"[FONT] Auto-detected Chinese font: {font_family}")
+    else:
+        # 兜底：常见预装字体名
+        for fname in ["Noto Sans CJK SC", "Noto Sans CJK", "Source Han Sans SC", "WenQuanYi Zen Hei"]:
+            try:
+                plt.rcParams["font.family"] = fname
+                print(f"[FONT] Fallback to: {fname}")
+                break
+            except Exception:
+                continue
     plt.rcParams["axes.unicode_minus"] = False
     return plt
