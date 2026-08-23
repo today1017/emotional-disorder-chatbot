@@ -146,10 +146,10 @@ def setup_matplotlib():
 
     # 2. 列出 matplotlib 字体管理器里的所有字体家族名
     print("[FONT] === Matplotlib fontManager families (first 50) ===")
-    # 修复排序错误：使用 key=lambda f: f.name
-    families = sorted(set(fm.fontManager.ttflist), key=lambda f: f.name)
-    for i, f in enumerate(families[:50]):
-        print(f"[FONT]   FAMILY: {f.name} (fname={f.fname})")
+    # 修复：先取名字集合再排序，避免 FontEntry 比较错误
+    families = sorted({f.name for f in fm.fontManager.ttflist})
+    for i, fam in enumerate(families[:50]):
+        print(f"[FONT]   FAMILY: {fam}")
     if len(families) > 50:
         print(f"[FONT]   ... and {len(families)-50} more families")
 
