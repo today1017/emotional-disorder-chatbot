@@ -109,7 +109,6 @@ def find_chinese_font():
 def setup_matplotlib():
     """
     全景调试版：打印容器里所有字体信息，最后用一个能跑通的配置。
-    部署完把日志发我，我一眼告诉你用哪个。
     """
     import matplotlib
     import matplotlib.pyplot as plt
@@ -147,6 +146,7 @@ def setup_matplotlib():
 
     # 2. 列出 matplotlib 字体管理器里的所有字体家族名
     print("[FONT] === Matplotlib fontManager families (first 50) ===")
+    # 修复排序错误：使用 key=lambda f: f.name
     families = sorted(set(fm.fontManager.ttflist), key=lambda f: f.name)
     for i, f in enumerate(families[:50]):
         print(f"[FONT]   FAMILY: {f.name} (fname={f.fname})")
