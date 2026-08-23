@@ -14,7 +14,6 @@ import json
 
 import matplotlib
 matplotlib.use("Agg")
-import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import streamlit as st
@@ -22,6 +21,7 @@ import streamlit as st
 import conversation
 import llm
 import rules
+import utils
 
 # ------------------------------ 页面配置 ------------------------------ #
 st.set_page_config(
@@ -31,8 +31,8 @@ st.set_page_config(
     initial_sidebar_state="expanded",
 )
 
-plt.rcParams["font.sans-serif"] = ["SimHei"]
-plt.rcParams["axes.unicode_minus"] = False
+# 统一使用 utils.setup_matplotlib() 配置中文字体（含云端自带字体）
+plt = utils.setup_matplotlib()
 
 st.markdown(
     """

@@ -108,6 +108,16 @@ def find_chinese_font():
 
 def setup_matplotlib():
     import matplotlib.pyplot as plt
-    plt.rcParams["font.sans-serif"] = ["SimHei"]
+    import matplotlib.font_manager as fm
+    import os
+
+    # 优先使用项目自带的 Noto Sans SC（云端部署必备）
+    font_path = os.path.join(os.path.dirname(__file__), "NotoSansSC-Regular.otf")
+    if os.path.exists(font_path):
+        fm.fontManager.addfont(font_path)
+        plt.rcParams["font.family"] = "Noto Sans SC"
+    else:
+        # 兜底：尝试系统字体
+        plt.rcParams["font.sans-serif"] = ["SimHei", "Microsoft YaHei", "Noto Sans CJK SC"]
     plt.rcParams["axes.unicode_minus"] = False
     return plt
