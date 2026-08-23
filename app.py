@@ -18,10 +18,12 @@ import numpy as np
 import pandas as pd
 import streamlit as st
 
+import importlib
 import conversation
 import llm
 import rules
 import utils
+importlib.reload(utils)
 
 # ------------------------------ 页面配置 ------------------------------ #
 st.set_page_config(
