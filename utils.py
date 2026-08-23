@@ -126,7 +126,7 @@ def setup_matplotlib():
 
     print("[FONT] === setup_matplotlib START ===")
     print(f"[FONT] Matplotlib version: {matplotlib.__version__}")
-    print(f"[FONT] Font cache dir: {fm.get_cachedir()}")
+    print(f"[FONT] Font cache dir: {matplotlib.get_cachedir()}")
 
     # 1. 优先：下载并注册 Noto Sans SC (TTF)
     def _download_and_register_font():
@@ -157,13 +157,12 @@ def setup_matplotlib():
 
     print("[FONT] === setup_matplotlib START ===")
     print(f"[FONT] Matplotlib version: {matplotlib.__version__}")
-    print(f"[FONT] Font cache dir: {fm.get_cachedir()}")
+    print(f"[FONT] Font cache dir: {matplotlib.get_cachedir()}")
 
     # 1. 优先下载注册
     family = None
     try:
         family = None
-        # 尝试下载
         font_url_ttf = "https://github.com/googlefonts/noto-cjk/raw/main/Sans/TTF/SimplifiedChinese/NotoSansSC-Regular.ttf"
         font_url_otf = "https://github.com/googlefonts/noto-cjk/raw/main/Sans/OTF/SimplifiedChinese/NotoSansSC-Regular.otf"
         for url in (font_url_ttf, font_url_otf):
@@ -178,7 +177,6 @@ def setup_matplotlib():
                     tmp_path = tmp.name
                 print(f"[FONT] Saved to {tmp_path}, size={os.path.getsize(tmp_path)}")
 
-                import matplotlib.font_manager as fm
                 fm.fontManager.addfont(tmp_path)
                 prop = fm.FontProperties(fname=tmp_path)
                 family = prop.get_name()
@@ -230,10 +228,4 @@ def setup_matplotlib():
     plt.rcParams["axes.unicode_minus"] = False
     print("[FONT] ⚠️ Using DejaVu Sans (no Chinese support)")
     print("[FONT] === setup_matplotlib END (DejaVu) ===")
-    return plt
-
-
-# 为了让导入时自动配置字体，提供一个快捷方式
-def get_plt():
-    import matplotlib.pyplot as plt
     return plt
