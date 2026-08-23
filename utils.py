@@ -136,7 +136,7 @@ def setup_matplotlib():
             files += glob.glob(os.path.join(d, "**", "*.ttc"), recursive=True)
             if files:
                 print(f"[FONT] Dir {d}: {len(files)} font files")
-                for f in files[:10]:  # 只显示前10个
+                for f in files[:10]:
                     print(f"[FONT]   FILE: {f}")
                 if len(files) > 10:
                     print(f"[FONT]   ... and {len(files)-10} more")
@@ -147,7 +147,7 @@ def setup_matplotlib():
 
     # 2. 列出 matplotlib 字体管理器里的所有字体家族名
     print("[FONT] === Matplotlib fontManager families (first 50) ===")
-    families = sorted(set(fm.fontManager.ttflist))
+    families = sorted(set(fm.fontManager.ttflist), key=lambda f: f.name)
     for i, f in enumerate(families[:50]):
         print(f"[FONT]   FAMILY: {f.name} (fname={f.fname})")
     if len(families) > 50:
