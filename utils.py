@@ -108,125 +108,68 @@ def find_chinese_font():
 
 def setup_matplotlib():
     """
-    全景调试版：打印容器里所有字体信息，最后用一个能跑通的配置。
+    中文字体配置（最终版）：
+    1. 优先用仓库根目录的 NotoSansSC-Regular.otf
+    2. 失败则从 jsDelivr CDN 运行时下载
+    3. 都失败才用 DejaVu（中文乱码）
     """
-    import matplotlib
     import matplotlib.pyplot as plt
     import matplotlib.font_manager as fm
     import os
-    import glob
+    import tempfile
+    import urllib.request
 
-    print("[FONT] ===== FULL FONT DEBUG START =====")
-    print(f"[FONT] Matplotlib version: {matplotlib.__version__}")
-    print(f"[FONT] Font cache dir: {matplotlib.get_cachedir()}")
+    print("[FONT] === setup START ===")
 
-    # 1. 列出常见字体目录下的所有字体文件
-    font_dirs = [
-        "/usr/share/fonts",
-        "/usr/local/share/fonts",
-        "/home/adminuser/.fonts",
-        "/home/adminuser/.local/share/fonts",
-    ]
-    print("[FONT] === Scanning font directories ===")
-    for d in font_dirs:
-        if os.path.exists(d):
-            files = glob.glob(os.path.join(d, "**", "*.tt*"), recursive=True)
-            files += glob.glob(os.path.join(d, "**", "*.otf"), recursive=True)
-            files += glob.glob(os.path.join(d, "**", "*.ttc"), recursive=True)
-            if files:
-                print(f"[FONT] Dir {d}: {len(files)} font files")
-                for f in files[:10]:
-                    print(f"[FONT]   FILE: {f}")
-                if len(files) > 10:
-                    print(f"[FONT]   ... and {len(files)-10} more")
-            else:
-                print(f"[FONT] Dir {d}: exists but empty")
-        else:
-            print(f"[FONT] Dir {d}: NOT EXISTS")
-
-    # 2. 列出 matplotlib 字体管理器里的所有字体家族名
-    print("[FONT] === Matplotlib fontManager families (first 50) ===")
-    # 修复：先取名字集合再排序，避免 FontEntry 比较错误
-    families = sorted({f.name for f in fm.fontManager.ttflist})
-    for i, fam in enumerate(families[:50]):
-        print(f"[FONT]   FAMILY: {fam}")
-    if len(families) > 50:
-        print(f"[FONT]   ... and {len(families)-50} more families")
-
-    # 3. 尝试 fc-list
-    print("[FONT] === fc-list output ===")
-    try:
-        import subprocess
-        out = subprocess.check_output(
-            ["fc-list", ":lang=zh", "family", "file"],
-            stderr=subprocess.DEVNULL, text=True, timeout=5
-        )
-        for line in out.splitlines()[:20]:
-            print(f"[FONT]   FC: {line}")
-    except Exception as e:
-        print(f"[FONT] fc-list failed: {e}")
-
-    # 3. 尝试所有已知字体文件路径，找到第一个存在的
-    candidate_paths = [
-        "/usr/share/fonts/opentype/noto/NotoSansCJK-Regular.ttc",
-        "/usr/share/fonts/opentype/noto/NotoSansCJKSC-Regular.otf",
-        "/usr/share/fonts/truetype/noto/NotoSansCJK-Regular.ttc",
-        "/usr/share/fonts/truetype/noto/NotoSansCJKSC-Regular.otf",
-        "/usr/share/fonts/opentype/noto/NotoSansSC-Regular.otf",
-        "/usr/share/fonts/truetype/noto/NotoSansSC-Regular.otf",
-        "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
-    ]
-    print("[FONT] === Checking candidate font files ===")
-    working_path = None
-    for p in candidate_paths:
-        exists = os.path.exists(p)
-        size = os.path.getsize(p) if exists else 0
-        print(f"[FONT]   CHECK: {p} -> {'EXISTS' if exists else 'MISSING'} ({size} bytes)")
-        if exists and size > 0:
-            working_path = p
-            break
-
-    # 4. 尝试用 matplotlib.font_manager 加载第一个存在的字体文件
-    import matplotlib.font_manager as fm
-    import matplotlib.pyplot as plt
-    import matplotlib
-
-    family_used = None
-    if working_path:
-        try:
-            prop = fm.FontProperties(fname=working_path)
-            family = prop.get_name()
-            plt.rcParams["font.family"] = family
-            plt.rcParams["axes.unicode_minus"] = False
-            family_used = family
-            print(f"[FONT] ✅ SUCCESS: Using font file {working_path} -> family '{family}'")
-        except Exception as e:
-            print(f"[FONT] ❌ FontProperties failed for {working_path}: {e}")
-
-    # 5. 如果文件加载失败，尝试直接用字体家族名（从 fontManager 里找）
-    if not family_used:
-        print("[FONT] === Trying known family names from fontManager ===")
-        known_families = [
-            "Noto Sans CJK SC", "Noto Sans CJK", "Noto Sans SC",
-            "Source Han Sans SC", "Source Han Sans",
-            "WenQuanYi Zen Hei", "WenQuanYi Micro Hei",
-            "DejaVu Sans",
-        ]
-        fm_families = {f.name for f in fm.fontManager.ttflist}
-        for fam in known_families:
-            if fam in fm_families:
-                plt.rcParams["font.family"] = fam
+    # ---- 方案1：仓库自带的字体文件 ----
+    font_path = os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                             "NotoSansSC-Regular.otf")
+    if os.path.exists(font_path):
+        size = os.path.getsize(font_path)
+        print(f"[FONT] Repo font found: {font_path} ({size} bytes)")
+        if size > 500000:  # 有效字体应 > 0.5MB
+            try:
+                fm.fontManager.addfont(font_path)
+                family = fm.FontProperties(fname=font_path).get_name()
+                plt.rcParams["font.family"] = family
+                print(f"[FONT] OK using repo font: {family}")
                 plt.rcParams["axes.unicode_minus"] = False
-                family_used = fam
-                print(f"[FONT] ✅ SUCCESS: Using family name '{fam}' (found in fontManager)")
-                break
+                return plt
+            except Exception as e:
+                print(f"[FONT] Repo font invalid: {e}")
+        else:
+            print("[FONT] Repo font too small (corrupted file?)")
 
-    # 6. 终极兜底
-    if not family_used:
-        plt.rcParams["font.family"] = "DejaVu Sans"
-        plt.rcParams["axes.unicode_minus"] = False
-        print("[FONT] ⚠️ FALLBACK: Using DejaVu Sans (no Chinese support)")
+    # ---- 方案2：运行时从 CDN 下载 ----
+    urls = [
+        "https://cdn.jsdelivr.net/gh/googlefonts/noto-cjk@main/Sans/OTF/SimplifiedChinese/NotoSansSC-Regular.otf",
+        "https://fastly.jsdelivr.net/gh/googlefonts/noto-cjk@main/Sans/OTF/SimplifiedChinese/NotoSansSC-Regular.otf",
+    ]
+    for url in urls:
+        try:
+            print(f"[FONT] Downloading: {url}")
+            req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"})
+            with urllib.request.urlopen(req, timeout=20) as resp:
+                data = resp.read()
+            print(f"[FONT] Downloaded {len(data)} bytes")
+            if len(data) < 500000:
+                print("[FONT] Downloaded file too small, skip")
+                continue
+            with tempfile.NamedTemporaryFile(suffix=".otf", delete=False) as tmp:
+                tmp.write(data)
+                tmp_path = tmp.name
+            fm.fontManager.addfont(tmp_path)
+            family = fm.FontProperties(fname=tmp_path).get_name()
+            plt.rcParams["font.family"] = family
+            print(f"[FONT] OK using downloaded font: {family}")
+            plt.rcParams["axes.unicode_minus"] = False
+            return plt
+        except Exception as e:
+            print(f"[FONT] Download failed: {e}")
+            continue
 
-    print(f"[FONT] === FINAL: font.family = {plt.rcParams['font.family']} ===")
-    print("[FONT] ===== FULL FONT DEBUG END =====")
+    # ---- 兜底 ----
+    plt.rcParams["font.family"] = "DejaVu Sans"
+    plt.rcParams["axes.unicode_minus"] = False
+    print("[FONT] WARNING: no Chinese font, will show boxes")
     return plt
