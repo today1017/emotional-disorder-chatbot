@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-utils.py —— 公共工具模块（停用词表、数据加载、文本处理）
+utils.py —— 公共工具模块（停用词表、数据加载、文本处理、字体配置）
 所有脚本统一引用，避免重复定义。
 """
 import os
@@ -19,7 +19,7 @@ BASE_STOPWORDS = {
     "挺", "蛮", "不", "没", "有", "没有", "是", "被", "把", "让", "给", "跟",
     "对", "从", "向", "到", "与", "及", "或", "并", "而", "但", "却", "可",
     "等", "以", "因", "为", "所以", "因为", "如果", "虽然", "但是", "然后",
-    "后来", "于是", "就是", "只是", "而是", "还是", "也是", "一个", "一种",
+    "后来", "于是", "就是", "只是", "那些", "还是", "也是", "一个", "一种",
     "一些", "一下", "一时", "一直", "一定", "一起", "一样", "一边", "自己",
     "本身", "咱们", "大家", "什么", "怎么", "怎样", "哪", "哪边", "多少", "谁",
     "现在", "今天", "明天", "昨天", "时候", "时间", "当时", "之前", "以后",
@@ -108,16 +108,6 @@ def find_chinese_font():
 
 def setup_matplotlib():
     import matplotlib.pyplot as plt
-    import matplotlib.font_manager as fm
-    import os
-
-    # 优先使用项目自带的 Noto Sans SC（云端部署必备）
-    font_path = os.path.join(os.path.dirname(__file__), "NotoSansSC-Regular.otf")
-    if os.path.exists(font_path):
-        fm.fontManager.addfont(font_path)
-        plt.rcParams["font.family"] = "Noto Sans SC"
-    else:
-        # 兜底：尝试系统字体
-        plt.rcParams["font.sans-serif"] = ["SimHei", "Microsoft YaHei", "Noto Sans CJK SC"]
+    plt.rcParams["font.family"] = "Noto Sans CJK SC"
     plt.rcParams["axes.unicode_minus"] = False
     return plt
