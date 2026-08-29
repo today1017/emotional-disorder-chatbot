@@ -38,11 +38,13 @@ st.markdown(
     """
     <style>
       .block-container { padding-top: 1.5rem; }
-      .chat-user { background:#E3F2FD; border-radius:14px; padding:10px 14px;
-                   margin:6px 0; text-align:right; border:1px solid #BBDEFB; }
-      .chat-ai   { background:#F5F5F5; border-radius:14px; padding:10px 14px;
-                   margin:6px 0; border:1px solid #E0E0E0; }
-      .chat-meta { font-size:11px; color:#9e9e9e; margin-top:4px; }
+      .chat-user { background:#D6EAF8; border-radius:14px; padding:10px 14px;
+                   margin:6px 0; text-align:right; border:1px solid #AED6F1;
+                   color:#1B2631; }
+      .chat-ai   { background:#EAECEE; border-radius:14px; padding:10px 14px;
+                   margin:6px 0; border:1px solid #D5D8DC;
+                   color:#1B2631; }
+      .chat-meta { font-size:11px; color:#7F8C8D; margin-top:4px; }
       .chat-tags { margin-top:6px; }
       .badge { display:inline-block; border-radius:999px; padding:2px 10px;
                font-size:12px; margin-right:6px; border:1px solid; }
@@ -53,6 +55,18 @@ st.markdown(
                    border-radius:8px; padding:6px 10px; margin:4px 0; }
       .card-sentiment { border-radius:10px; padding:10px 14px; margin-bottom:8px;
                         box-shadow:0 1px 3px rgba(0,0,0,.06); }
+      @media (prefers-color-scheme: dark) {
+        .chat-user { background:#1B3A5C; border-color:#2E6DA4; color:#ECF0F1; }
+        .chat-ai   { background:#2C3E50; border-color:#34495E; color:#ECF0F1; }
+        .chat-meta { color:#ABB2B9; }
+        .ctx-hint  { background:#4A235A; color:#D2B4DE; }
+        .badge { color:#ECF0F1; }
+      }
+      [data-theme="dark"] .chat-user { background:#1B3A5C; border-color:#2E6DA4; color:#ECF0F1; }
+      [data-theme="dark"] .chat-ai   { background:#2C3E50; border-color:#34495E; color:#ECF0F1; }
+      [data-theme="dark"] .chat-meta { color:#ABB2B9; }
+      [data-theme="dark"] .ctx-hint { background:#4A235A; color:#D2B4DE; }
+      [data-theme="dark"] .badge { color:#ECF0F1; }
     </style>
     """,
     unsafe_allow_html=True,
@@ -335,7 +349,7 @@ chat_container = st.container(border=True, height=460)
 with chat_container:
     if not sess.messages:
         st.markdown(
-            '<div style="color:#9e9e9e;text-align:center;padding:40px 0;">'
+            '<div style="color:#7F8C8D;text-align:center;padding:40px 0;">'
             "👋 你好，我是演示用共情助手。可以和我聊聊你的感受（多轮对话已启用）。"
             "</div>",
             unsafe_allow_html=True,
