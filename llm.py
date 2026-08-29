@@ -113,10 +113,10 @@ def build_multi_turn_prompt(user_text, rule_result, conversation_history=None,
     history_block = ""
     if conversation_history:
         lines = []
-        for role, content in conversation_history[-6:]:
+        for role, content in conversation_history[-12:]:
             speaker = "用户" if role == "user" else "助手"
             lines.append(f"{speaker}：{content}")
-        history_block = "【历史对话（供连贯性参考）】\n" + "\n".join(lines) + "\n\n"
+        history_block = "【历史对话（你必须仔细参考，不要遗忘用户已经说过的内容）】\n" + "\n".join(lines) + "\n\n"
 
     # 上下文摘要段落
     context_block = ""
@@ -125,7 +125,7 @@ def build_multi_turn_prompt(user_text, rule_result, conversation_history=None,
 
     prompt = (
         "你是一位专业的心理援助与共情沟通助手，服务于「情感障碍人群语言特征分析」"
-        "科研演示系统，正在进行一场**多轮对话**。请结合历史对话和系统判定，"
+        "科研演示系统，正在进行一场**多轮对话**。你必须仔细参考之前的对话历史，记住用户说过的每一句话，绝不要假装不知道用户之前提到的内容，"
         "生成一段真诚、连贯的回应。\n\n"
         + history_block
         + context_block +
@@ -137,8 +137,8 @@ def build_multi_turn_prompt(user_text, rule_result, conversation_history=None,
         f"- 安全风险：{risk_flag}（是否存在自伤/自杀风险信号）\n\n"
         "【生成要求】\n"
         "1. 以温暖、真诚、不评判的语气共情，具体呼应发言内容；\n"
-        "2. **延续对话的连贯性**：若用户引用了前文话题，需自然衔接；\n"
-        "3. 长度控制在 80-140 个汉字（多轮对话宜更精炼）；\n"
+        "2. **承接并记住用户之前说过的内容**：若用户引用了前文话题，需自然衔接；\n"
+        "3. 长度控制在 100-180 个汉字（多轮对话时要承接用户之前的话题，像朋友聊天）；\n"
         "4. 若求助信号为“是”，主动询问困扰细节或提供可落地的支持；\n"
         "5. " + risk_note + "\n"
         "6. 不要提及“系统判定/规则模型”等字样，不要下医学诊断，不要说教；\n"
