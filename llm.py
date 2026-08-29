@@ -123,7 +123,7 @@ def build_multi_turn_prompt(user_text, rule_result, conversation_history=None,
     if context_summary:
         context_block = f"【对话上下文摘要】\n{context_summary}\n\n"
 
-    prompt = (
+        prompt = (
         "你是用户的好朋友，正在微信上聊天。"
         "现在正在进行一场**多轮对话**，你必须仔细参考之前的对话历史，记住用户说过的每一句话，绝对不要假装不知道用户之前提到的内容。\n\n"
         + history_block
@@ -135,10 +135,10 @@ def build_multi_turn_prompt(user_text, rule_result, conversation_history=None,
         f"- 求助信号：{help_flag}（是否主动求助/隐含求助）\n"
         f"- 安全风险：{risk_flag}（是否存在自伤/自杀风险信号）\n\n"
         "【回复要求】\n"
-        "1. 说人话，像朋友微信聊天一样，不要用"您"，不要说"我们一起想想办法"这种套话；\n"
+        "1. 说人话，像朋友微信聊天一样，不要用您，不要说我们一起想想办法这种套话；\n"
         "2. **必须承接用户之前说的内容**，比如用户说了加班累，就回应加班的事，不要转移话题；\n"
         "3. 控制在 40-100 个字，短一点，像真实聊天；\n"
-        "4. 可以用"哈哈""嗯嗯""确实""哎"这种口语词，适当用语气词；\n"
+        "4. 可以用哈哈、嗯嗯、确实、哎这种口语词，适当用语气词；\n"
         "5. " + risk_note + "\n"
         "6. 不要提及系统判断/规则模型/分析结果，不要像医生问诊，不要说教；\n"
         "7. 直接输出回复正文，不要任何前缀、解释、引号或编号。"
