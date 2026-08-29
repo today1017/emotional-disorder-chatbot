@@ -7,7 +7,10 @@ import os
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 OUTPUT_DIR = os.path.join(BASE_DIR, "output_figures")
-os.makedirs(OUTPUT_DIR, exist_ok=True)
+try:
+    os.makedirs(OUTPUT_DIR, exist_ok=True)
+except OSError:
+    pass  # Streamlit Cloud 只读文件系统，忽略
 
 DATA_DIR = os.path.join(os.path.dirname(BASE_DIR), "桌面")
 DATA_FILES = [
