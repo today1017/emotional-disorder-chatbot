@@ -89,6 +89,8 @@ if "llm_model" not in st.session_state:
     st.session_state.llm_model = llm.DEFAULT_MODEL
 if "llm_base_url" not in st.session_state:
     st.session_state.llm_base_url = llm.DEFAULT_BASE_URL
+if "last_api_error" not in st.session_state:
+    st.session_state.last_api_error = None
 
 
 def new_session():
@@ -108,6 +110,7 @@ def process_input(text):
     sess.add_user_message(text, result)
 
     ai_reply = None
+    st.session_state.last_api_error = None
     if st.session_state.enable_llm and st.session_state.api_key:
         with st.spinner("小树洞正在想怎么回应你..."):
             history = [(m.role, m.content)
@@ -115,7 +118,7 @@ def process_input(text):
                        if m.role in ("user", "assistant") and m.content != text]
             history = history[-12:]
             context_summary = sess.context.get_context_summary()
-            ai_reply = llm.generate_multi_turn_reply(
+            ai_reply, api_error = llm.generate_multi_turn_reply(
                 text, result,
                 api_key=st.session_state.api_key,
                 conversation_history=history,
@@ -123,6 +126,8 @@ def process_input(text):
                 base_url=st.session_state.llm_base_url,
                 model=st.session_state.llm_model,
             )
+            if api_error:
+                st.session_state.last_api_error = api_error
     sess.add_assistant_message(ai_reply or result["建议话术"])
     st.session_state.user_input = ""
 
@@ -151,9 +156,9 @@ with st.sidebar:
                       help=f"环境变量 {llm.ENV_KEY_NAME} 或此处填写")
         
         model_options = {
-            "GLM-4-Flash（免费）": (llm.DEFAULT_BASE_URL, "glm-4-flash"),
-            "GLM-4-Plus（付费，效果好）": (llm.DEFAULT_BASE_URL, "glm-4-plus"),
-            "DeepSeek-V3（送500万tokens）": (llm.DEEPSEEK_BASE_URL, "deepseek-chat"),
+            "GLM-4-Flash": (llm.DEFAULT_BASE_URL, "glm-4-flash"),
+            "GLM-4-Plus": (llm.DEFAULT_BASE_URL, "glm-4-plus"),
+            "DeepSeek-V3": (llm.DEEPSEEK_BASE_URL, "deepseek-chat"),
         }
         selected = st.selectbox("选择模型", list(model_options.keys()), key="model_select")
         base_url, model = model_options[selected]
@@ -162,6 +167,9 @@ with st.sidebar:
         
         if not st.session_state.api_key:
             st.caption("未配置 Key，将回退预设话术。")
+
+    if st.session_state.get("last_api_error"):
+        st.error(f"API 调用失败：{st.session_state.last_api_error}")
 
     st.button("重新开始", on_click=new_session, use_container_width=True)
 
