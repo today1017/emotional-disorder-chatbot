@@ -107,11 +107,28 @@ def find_chinese_font():
 
 
 def setup_matplotlib():
-    """
-    统一字体配置：Streamlit Cloud 预装 Noto Sans CJK SC，直接使用，
-    完全绕过字体文件上传/路径/大小写等一切问题。
-    """
+    import matplotlib
     import matplotlib.pyplot as plt
-    plt.rcParams["font.family"] = "Noto Sans CJK SC"
+    import matplotlib.font_manager as fm
+    import os
+
+    font_path = None
+    candidates = [
+        os.path.join(os.path.dirname(__file__), "NotoSansSC-Regular.otf"),
+        r"C:\Windows\Fonts\simhei.ttf",
+        r"C:\Windows\Fonts\msyh.ttc",
+        "/usr/share/fonts/truetype/noto/NotoSansCJK-Regular.ttc",
+    ]
+    for c in candidates:
+        if os.path.exists(c):
+            font_path = c
+            break
+
+    if font_path:
+        fm.fontManager.addfont(font_path)
+        prop = fm.FontProperties(fname=font_path)
+        plt.rcParams["font.family"] = prop.get_name()
+    else:
+        plt.rcParams["font.family"] = "sans-serif"
     plt.rcParams["axes.unicode_minus"] = False
     return plt
