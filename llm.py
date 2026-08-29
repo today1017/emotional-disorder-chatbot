@@ -90,59 +90,53 @@ def build_prompt(user_text, rule_result):
 
 def build_multi_turn_prompt(user_text, rule_result, conversation_history=None,
                             context_summary=None):
-    """
-    多轮对话版 prompt 构建：
-      - conversation_history: 最近若干轮 (role, content) 元组列表
-      - context_summary: DialogContext.get_context_summary() 的输出
-    相比 build_prompt，额外包含：
-      ① 历史对话内容（帮助 LLM 保持话题连贯）
-      ② 上下文聚合摘要（情感趋势 / 风险升级 / 连续消极等）
-    """
     sent = rule_result["情绪极性"]["label"]
     help_flag = rule_result["求助信号"]["label"]
     risk_flag = rule_result["安全风险"]["label"]
 
     risk_note = (
-        "用户当前可能存在自伤/自杀风险，回应的开头和结尾都要传递关怀，"
-        "并明确建议其联系专业支持（全国心理援助热线 12356）或身边信任的人。"
+        "用户当前可能存在自伤/自杀风险，回复的开头和结尾要表达关切，"
+        "明确引导求助专业支持，全国心理救援热线 12356，或建议联系身边的人。"
         if risk_flag == "是" else
-        "无需特别强调危机资源，专注共情与陪伴。"
+        "没有特别强调危险，可以专注偶聊和闪开转移。"
     )
 
-    # 历史对话段落（最多 6 条）
     history_block = ""
     if conversation_history:
-        lines = []
-        for role, content in conversation_history[-12:]:
+        history_lines = []
+        for role, msg_content in conversation_history[-12:]:
             speaker = "用户" if role == "user" else "助手"
-            lines.append(f"{speaker}：{content}")
-        history_block = "【历史对话（你必须仔细参考，不要遗忘用户已经说过的内容）】\n" + "\n".join(lines) + "\n\n"
+            history_lines.append(f"{speaker}：{msg_content}")
+        history_block = "以下是之前的对话历史：" + chr(10) + chr(10).join(history_lines) + chr(10) + chr(10)
 
-    # 上下文摘要段落
     context_block = ""
     if context_summary:
-        context_block = f"【对话上下文摘要】\n{context_summary}\n\n"
+        context_block = "对话上下文摘要：" + chr(10) + context_summary + chr(10) + chr(10)
 
-        prompt = (
-        "你是用户的好朋友，正在微信上聊天。"
-        "现在正在进行一场**多轮对话**，你必须仔细参考之前的对话历史，记住用户说过的每一句话，绝对不要假装不知道用户之前提到的内容。\n\n"
+    user_line = chr(10) + "【用户最新发言】" + chr(10) + '"' + user_text + '"' + chr(10) + chr(10)
+    sys_line = "【系统分析（内部参考）】" + chr(10) + "- 情绪：" + sent + chr(10) + "- 求助：" + help_flag + chr(10) + "- 风险：" + risk_flag + chr(10) + chr(10)
+
+    rules = "【回复要求】" + chr(10)
+    rules += "1. 先共情再引导：先回应用户的情绪，再给实用建议；" + chr(10)
+    rules += "2. 必须承接用户之前说的内容，不要转移话题；" + chr(10)
+    rules += "3. 60-120字，不要太长；" + chr(10)
+    rules += "4. 用口语词让语气自然，但不要卖萌；" + chr(10)
+    rules += "5. " + risk_note + chr(10)
+    rules += "6. 不提系统判断，不像医生问诊，不说教；" + chr(10)
+    rules += "7. 直接输出回复，不要任何前缀、编号、引号。"
+
+    prompt = (
+        "你是一位温暖、真诚的朋友，正在微信上和用户聊天。"
+        "用户可能正在经历情绪困扰，你需要先偶聊、再引导，像真正的朋友一样陪伴。"
+        "现在正在进行一场多轮对话，你必须仔细参考之前的对话历史，记住用户说过的每一句话。"
+        + chr(10) + chr(10)
         + history_block
-        + context_block +
-        "【用户最新发言】\n"
-        f'"{user_text}"\n\n'
-        "【系统分析结果（内部参考，不要提及）】\n"
-        f"- 情绪极性：{sent}\n"
-        f"- 求助信号：{help_flag}（是否主动求助/隐含求助）\n"
-        f"- 安全风险：{risk_flag}（是否存在自伤/自杀风险信号）\n\n"
-        "【回复要求】\n"
-        "1. 说人话，像朋友微信聊天一样，不要用您，不要说我们一起想想办法这种套话；\n"
-        "2. **必须承接用户之前说的内容**，比如用户说了加班累，就回应加班的事，不要转移话题；\n"
-        "3. 控制在 40-100 个字，短一点，像真实聊天；\n"
-        "4. 可以用哈哈、嗯嗯、确实、哎这种口语词，适当用语气词；\n"
-        "5. " + risk_note + "\n"
-        "6. 不要提及系统判断/规则模型/分析结果，不要像医生问诊，不要说教；\n"
-        "7. 直接输出回复正文，不要任何前缀、解释、引号或编号。"
-    )    return prompt
+        + context_block
+        + user_line
+        + sys_line
+        + rules
+    )
+    return prompt
 
 
 def call_llm(prompt, api_key, base_url=DEFAULT_BASE_URL,
