@@ -113,7 +113,7 @@ def process_input(text):
             history = [(m.role, m.content)
                        for m in sess.messages
                        if m.role in ("user", "assistant") and m.content != text]
-            history = history[-6:]
+            history = history[-12:]
             context_summary = sess.context.get_context_summary()
             ai_reply = llm.generate_multi_turn_reply(
                 text, result,
