@@ -149,8 +149,17 @@ with st.sidebar:
         st.checkbox("启用 AI 回应", key="enable_llm")
         st.text_input("API Key", type="password", key="api_key", value=st.session_state.api_key,
                       help=f"环境变量 {llm.ENV_KEY_NAME} 或此处填写")
-        st.text_input("模型", key="llm_model")
-        st.text_input("接口地址", key="llm_base_url")
+        
+        model_options = {
+            "GLM-4-Flash（免费）": (llm.DEFAULT_BASE_URL, "glm-4-flash"),
+            "GLM-4-Plus（付费，效果好）": (llm.DEFAULT_BASE_URL, "glm-4-plus"),
+            "DeepSeek-V3（送500万tokens）": (llm.DEEPSEEK_BASE_URL, "deepseek-chat"),
+        }
+        selected = st.selectbox("选择模型", list(model_options.keys()), key="model_select")
+        base_url, model = model_options[selected]
+        st.session_state.llm_base_url = base_url
+        st.session_state.llm_model = model
+        
         if not st.session_state.api_key:
             st.caption("未配置 Key，将回退预设话术。")
 
