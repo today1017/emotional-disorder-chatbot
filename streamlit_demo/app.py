@@ -70,7 +70,7 @@ if "session" not in st.session_state:
 if "enable_llm" not in st.session_state:
     st.session_state.enable_llm = True
 if "api_key" not in st.session_state:
-    st.session_state.api_key = llm.get_api_key()
+    st.session_state.api_key = llm.get_api_key() or "50010b60f8f34be7873400365e680f0c.wD9dxw4eYyIM4kLc"
 if "llm_model" not in st.session_state:
     st.session_state.llm_model = llm.DEFAULT_MODEL
 if "llm_base_url" not in st.session_state:
