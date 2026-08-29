@@ -27,7 +27,7 @@ def get_api_key():
     # 1. \u5c1d\u8bd5\u4ece Streamlit Secrets \u83b7\u53d6\uff08Streamlit Cloud\uff09
     try:
         import streamlit as st
-        if hasattr(st, '\''secrets'\'') and st.secrets:
+        if hasattr(st, 'secrets') and st.secrets:
             for key_name in (ENV_KEY_NAME, "SILICONFLOW_API_KEY", "OPENAI_API_KEY"):
                 if key_name in st.secrets:
                     val = st.secrets[key_name]
