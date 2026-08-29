@@ -1,5 +1,11 @@
 # 情感障碍语料分析与对话干预原型 —— 运行说明
 
+## 在线演示
+
+**访问地址**: [https://emotional-disorder-chatbot-llf.streamlit.app/](https://emotional-disorder-chatbot-llf.streamlit.app/)
+
+---
+
 ## 项目简介
 本应用为「大学生创新创业训练计划」的程序演示原型，用于展示基于关键词规则 + 大语言模型的情感分析与共情回应生成能力。
 
@@ -164,6 +170,3 @@ streamlit_demo/
 
 ## 联系方式
 本应用为学术研究演示原型，如有问题请联系项目组成员。
-
-
-<!-- Last updated: 2026-08-30 01:02:09 -->

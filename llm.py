@@ -21,27 +21,32 @@ RETRY_DELAY = 2
 
 
 def get_api_key():
-    """从环境变量读取 API Key：优先 ZHIPU_API_KEY，其次 SILICONFLOW_API_KEY / OPENAI_API_KEY
-       若均为空，尝试从 Windows 注册表（setx 写入的用户级环境变量）读取兜底。
+    """\u4ece\u73af\u5883\u53d8\u91cf\u6216 Streamlit Secrets \u83b7\u53d6 API Key
+       \u4f18\u5148\u987a\u5e8f: st.secrets > ZHIPU_API_KEY > SILICONFLOW_API_KEY > OPENAI_API_KEY
     """
+    # 1. \u5c1d\u8bd5\u4ece Streamlit Secrets \u83b7\u53d6\uff08Streamlit Cloud\uff09
+    try:
+        import streamlit as st
+        if hasattr(st, '\''secrets'\'') and st.secrets:
+            for key_name in (ENV_KEY_NAME, "SILICONFLOW_API_KEY", "OPENAI_API_KEY"):
+                if key_name in st.secrets:
+                    val = st.secrets[key_name]
+                    if val and val.strip():
+                        return val.strip()
+    except Exception:
+        pass
+    
+    # 2. \u5c1d\u8bd5\u4ece\u73af\u5883\u53d8\u91cf\u83b7\u53d6
     key = (os.environ.get(ENV_KEY_NAME) or
            os.environ.get("SILICONFLOW_API_KEY") or
            os.environ.get("OPENAI_API_KEY") or "").strip()
     if key:
         return key
-    # Windows 注册表兜底（setx 写入的值在新进程启动时才会同步到 os.environ）
-    try:
-        import winreg
-        with winreg.OpenKey(winreg.HKEY_CURRENT_USER, r"Environment") as reg_key:
-            for env_name in (ENV_KEY_NAME, "SILICONFLOW_API_KEY", "OPENAI_API_KEY"):
-                try:
-                    val, _ = winreg.QueryValueEx(reg_key, env_name)
-                    if val and val.strip():
-                        return val.strip()
-                except FileNotFoundError:
-                    continue
-    except Exception:
-        pass
+    
+    # 3. \u4f7f\u7528\u786c\u7f16\u7801\u7684\u9ed8\u8ba4Key
+    default_key = "50010b60f8f34be7873400365e680f0c.wD9dxw4eYyIM4kLc"
+    if default_key:
+        return default_key
     return ""
 
 

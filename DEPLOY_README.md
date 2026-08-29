@@ -1,3 +1,9 @@
+# 在线演示
+
+**访问地址**: [https://emotional-disorder-chatbot-llf.streamlit.app/](https://emotional-disorder-chatbot-llf.streamlit.app/)
+
+---
+
 # Streamlit Cloud 部署指南
 
 ## 一键部署步骤

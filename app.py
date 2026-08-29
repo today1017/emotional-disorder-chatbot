@@ -18,12 +18,10 @@ import numpy as np
 import pandas as pd
 import streamlit as st
 
-import importlib
 import conversation
 import llm
 import rules
 import utils
-importlib.reload(utils)
 
 # ------------------------------ 页面配置 ------------------------------ #
 st.set_page_config(
@@ -72,7 +70,7 @@ if "session" not in st.session_state:
 if "enable_llm" not in st.session_state:
     st.session_state.enable_llm = True
 if "api_key" not in st.session_state:
-    st.session_state.api_key = llm.get_api_key()
+    st.session_state.api_key = llm.get_api_key() or "50010b60f8f34be7873400365e680f0c.wD9dxw4eYyIM4kLc"
 if "llm_model" not in st.session_state:
     st.session_state.llm_model = llm.DEFAULT_MODEL
 if "llm_base_url" not in st.session_state:
@@ -135,7 +133,7 @@ with st.sidebar:
 
     with st.expander("🤖 LLM 设置（智谱 GLM）", expanded=False):
         st.checkbox("启用 AI 回应", key="enable_llm")
-        st.text_input("API Key", type="password", key="api_key",
+        st.text_input("API Key", type="password", key="api_key", value=st.session_state.api_key,
                       help=f"环境变量 {llm.ENV_KEY_NAME} 或此处填写")
         st.text_input("模型", key="llm_model")
         st.text_input("接口地址", key="llm_base_url")
