@@ -41,10 +41,10 @@ st.markdown(
       .chat-meta { font-size:11px; color:#7F8C8D; margin-top:4px; }
       .chat-tags { margin-top:6px; }
       .badge { display:inline-block; border-radius:999px; padding:2px 10px;
-               font-size:12px; margin-right:6px; border:1px solid; }
-      .risk-flag { background:#FFEBEE; color:#C62828; border-color:#EF9A9A; }
-      .ok-flag   { background:#E8F5E9; color:#2E7D32; border-color:#A5D6A7; }
-      .warn-flag { background:#FFF3E0; color:#E65100; border-color:#FFCC80; }
+               font-size:11px; margin-right:6px; font-weight:500; }
+      .risk-flag { background:#FFCDD2; color:#B71C1C; }
+      .ok-flag   { background:#C8E6C9; color:#1B5E20; }
+      .warn-flag { background:#FFE0B2; color:#E65100; }
       .ctx-hint  { font-size:12px; color:#6A1B9A; background:#F3E5F5;
                    border-radius:8px; padding:6px 10px; margin:4px 0; }
       .card-sentiment { border-radius:10px; padding:10px 14px; margin-bottom:8px;
@@ -55,12 +55,18 @@ st.markdown(
         .chat-meta { color:#ABB2B9; }
         .ctx-hint  { background:#4A235A; color:#D2B4DE; }
         .badge { color:#ECF0F1; }
+        .risk-flag { background:#5C2020; color:#FFCDD2; }
+        .ok-flag   { background:#1B3D1B; color:#C8E6C9; }
+        .warn-flag { background:#4A3000; color:#FFE0B2; }
       }
       [data-theme="dark"] .chat-user { background:#1B3A5C; border-color:#2E6DA4; color:#ECF0F1; }
       [data-theme="dark"] .chat-ai   { background:#2C3E50; border-color:#34495E; color:#ECF0F1; }
       [data-theme="dark"] .chat-meta { color:#ABB2B9; }
       [data-theme="dark"] .ctx-hint { background:#4A235A; color:#D2B4DE; }
       [data-theme="dark"] .badge { color:#ECF0F1; }
+      [data-theme="dark"] .risk-flag { background:#5C2020; color:#FFCDD2; }
+      [data-theme="dark"] .ok-flag   { background:#1B3D1B; color:#C8E6C9; }
+      [data-theme="dark"] .warn-flag { background:#4A3000; color:#FFE0B2; }
     </style>
     """,
     unsafe_allow_html=True,
@@ -137,9 +143,9 @@ def fill_demo(text):
 # 侧边栏：LLM 设置 + 当前轮分析卡片
 # ==========================================================================
 with st.sidebar:
-    st.header("🍃 设置")
+    st.header("设置")
 
-    with st.expander("🔧 对话设置", expanded=False):
+    with st.expander("对话设置", expanded=False):
         st.checkbox("启用 AI 回应", key="enable_llm")
         st.text_input("API Key", type="password", key="api_key", value=st.session_state.api_key,
                       help=f"环境变量 {llm.ENV_KEY_NAME} 或此处填写")
@@ -148,11 +154,11 @@ with st.sidebar:
         if not st.session_state.api_key:
             st.caption("未配置 Key，将回退预设话术。")
 
-    st.button("🔄 重新开始", on_click=new_session, use_container_width=True)
+    st.button("重新开始", on_click=new_session, use_container_width=True)
 
     # ---- 会话导出/情绪报告 ----
     st.divider()
-    st.subheader("📥 保存对话")
+    st.subheader("保存对话")
     
     def export_session_json():
         """导出会话为 JSON"""
@@ -224,7 +230,7 @@ with st.sidebar:
     
     col1, col2 = st.columns(2)
     with col1:
-        if st.button("📥 保存对话记录", use_container_width=True):
+        if st.button("保存对话记录", use_container_width=True):
             json_data = export_session_json()
             st.download_button(
                 label="确认保存",
@@ -234,7 +240,7 @@ with st.sidebar:
                 use_container_width=True,
             )
     with col2:
-        if st.button("📄 保存心情报告", use_container_width=True):
+        if st.button("下载情绪报告", use_container_width=True):
             report_md = export_emotion_report()
             st.download_button(
                 label="确认保存",
@@ -246,7 +252,7 @@ with st.sidebar:
 
     # ---- 会话概览 ----
     st.divider()
-    st.subheader("📋 对话概览")
+    st.subheader("对话概览")
     sess = st.session_state.session
     ctx = sess.context
 
@@ -256,13 +262,13 @@ with st.sidebar:
     c3.metric("主导情绪", ctx.dominant_sentiment)
 
     if ctx.negative_streak >= 2:
-        st.warning(f"💛 你已经连续 {ctx.negative_streak + 1} 次表达不开心了")
+        st.warning(f"你已经连续 {ctx.negative_streak + 1} 次表达不开心了")
     if ctx.escalation_flag:
-        st.error("🔴 你的情绪变化比较大，需要多关注自己")
+        st.error("你的情绪变化比较大，需要多关注自己")
 
     # ---- 最新一轮分析卡片 ----
     st.divider()
-    st.subheader("📊 最新分析")
+    st.subheader("最新分析")
     user_msgs = [m for m in sess.messages if m.role == "user"]
     if user_msgs:
         last = user_msgs[-1]
@@ -277,7 +283,7 @@ with st.sidebar:
             f"""
             <div class="card-sentiment" style="background:{bg};border-left:6px solid {fg};">
               <div style="color:{fg};font-size:12px;font-weight:600;">心情</div>
-              <div style="color:{fg};font-size:24px;font-weight:700;">{emoji} {sent}</div>
+              <div style="color:{fg};font-size:24px;font-weight:700;">{sent}</div>
               <div style="margin-top:4px;">
                 <span class="badge {'ok-flag' if risk_flag=='否' else 'risk-flag'}">⚠ 风险：{'是' if risk_flag=='是' else '未检出'}</span>
                 <span class="badge {'ok-flag' if help_flag=='否' else 'warn-flag'}">求助：{'是' if help_flag=='是' else '未检出'}</span>
@@ -291,10 +297,10 @@ with st.sidebar:
         # 上下文提示（情绪修正/风险升级/波动等）
         ctx_info = r.get("上下文", {})
         for hint in ctx_info.get("上下文提示", []):
-            st.markdown(f'<div class="ctx-hint">🔍 {hint}</div>', unsafe_allow_html=True)
+            st.markdown(f'<div class="ctx-hint">{hint}</div>', unsafe_allow_html=True)
 
         # 命中关键词
-        with st.expander("🔍 查看分析细节"):
+        with st.expander("查看分析细节"):
             for dim in ["情绪极性", "求助信号", "安全风险"]:
                 words = r[dim]["matched"]
                 st.markdown(f"**{dim}**：{'、'.join(words) if words else '（无命中）'}")
@@ -309,7 +315,7 @@ with st.sidebar:
 # ==========================================================================
 # 主区域：多轮对话界面
 # ==========================================================================
-st.title("🌿 心情树洞 · 倾听与陪伴")
+st.title("心情树洞 · 倾听与陪伴")
 st.caption(
     "在这里，你的每句话都会被认真倾听。"
     "你的心情会被温柔地理解，你的感受会被真诚地回应。"
@@ -344,7 +350,7 @@ with chat_container:
     if not sess.messages:
         st.markdown(
             '<div style="color:#7F8C8D;text-align:center;padding:40px 0;">'
-            "🌿 你好呀，想聊什么都可以，我在这里听你说。"
+            "你好呀，想聊什么都可以，我在这里听你说。"
             "</div>",
             unsafe_allow_html=True,
         )
