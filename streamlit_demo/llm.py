@@ -27,7 +27,7 @@ def get_api_key():
     # 1. \u5c1d\u8bd5\u4ece Streamlit Secrets \u83b7\u53d6\uff08Streamlit Cloud\uff09
     try:
         import streamlit as st
-        if hasattr(st, 'secrets') and st.secrets:
+        if hasattr(st, '\''secrets'\'') and st.secrets:
             for key_name in (ENV_KEY_NAME, "SILICONFLOW_API_KEY", "OPENAI_API_KEY"):
                 if key_name in st.secrets:
                     val = st.secrets[key_name]
@@ -42,7 +42,12 @@ def get_api_key():
            os.environ.get("OPENAI_API_KEY") or "").strip()
     if key:
         return key
-    # Windows \u6ce8\u518c\u8868\u56de\u9000\u65b9\u5f0f
+    
+    # 3. \u4f7f\u7528\u786c\u7f16\u7801\u7684\u9ed8\u8ba4Key
+    default_key = "50010b60f8f34be7873400365e680f0c.wD9dxw4eYyIM4kLc"
+    if default_key:
+        return default_key
+    return ""
 
 
 def build_prompt(user_text, rule_result):
