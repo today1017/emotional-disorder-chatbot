@@ -110,11 +110,13 @@ def setup_matplotlib():
     import matplotlib
     import matplotlib.pyplot as plt
     import matplotlib.font_manager as fm
-    import os
+    import os, urllib.request
 
     font_path = None
     candidates = [
         os.path.join(os.path.dirname(__file__), "NotoSansSC-Regular.otf"),
+        os.path.join(os.getcwd(), "NotoSansSC-Regular.otf"),
+        os.path.join(os.getcwd(), "streamlit_demo", "NotoSansSC-Regular.otf"),
         r"C:\Windows\Fonts\simhei.ttf",
         r"C:\Windows\Fonts\msyh.ttc",
         "/usr/share/fonts/truetype/noto/NotoSansCJK-Regular.ttc",
@@ -123,6 +125,15 @@ def setup_matplotlib():
         if os.path.exists(c):
             font_path = c
             break
+
+    if not font_path:
+        try:
+            url = "https://raw.githubusercontent.com/today1017/emotional-disorder-chatbot/main/NotoSansSC-Regular.otf"
+            local = os.path.join(os.getcwd(), "NotoSansSC-Regular.otf")
+            urllib.request.urlretrieve(url, local)
+            font_path = local
+        except Exception:
+            pass
 
     if font_path:
         fm.fontManager.addfont(font_path)
