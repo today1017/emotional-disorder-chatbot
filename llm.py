@@ -179,27 +179,38 @@ def call_llm(prompt, api_key, base_url=DEFAULT_BASE_URL,
         },
         method="POST",
     )
+    last_error = None
     for attempt in range(MAX_RETRIES):
         try:
             with urllib.request.urlopen(req, timeout=timeout) as resp:
                 data = json.loads(resp.read().decode("utf-8"))
             text = data["choices"][0]["message"]["content"].strip()
-            return text or None
-        except (urllib.error.URLError, urllib.error.HTTPError,
-                TimeoutError, json.JSONDecodeError, KeyError, IndexError) as e:
+            return text or None, None
+        except urllib.error.HTTPError as e:
+            body = ""
+            try:
+                body = e.read().decode("utf-8", errors="replace")[:200]
+            except Exception:
+                pass
+            last_error = f"HTTP {e.code}: {body}"
             if attempt < MAX_RETRIES - 1:
                 time.sleep(RETRY_DELAY * (attempt + 1))
                 continue
-            return None
-    return None
+        except (urllib.error.URLError, TimeoutError,
+                json.JSONDecodeError, KeyError, IndexError) as e:
+            last_error = str(e)
+            if attempt < MAX_RETRIES - 1:
+                time.sleep(RETRY_DELAY * (attempt + 1))
+                continue
+    return None, last_error or "未知错误"
 
 
 def generate_empathic_reply(user_text, rule_result, api_key=None,
                             base_url=DEFAULT_BASE_URL, model=DEFAULT_MODEL,
                             timeout=DEFAULT_TIMEOUT):
-    """一站式入口：拼接 prompt → 调用 LLM → 返回回应文本；失败返回 None"""
+    """一站式入口：拼接 prompt → 调用 LLM → 返回 (回应文本, 错误信息)"""
     if not api_key:
-        return None
+        return None, "未配置 API Key"
     prompt = build_prompt(user_text, rule_result)
     return call_llm(prompt, api_key=api_key, base_url=base_url,
                     model=model, timeout=timeout)
@@ -209,9 +220,9 @@ def generate_multi_turn_reply(user_text, rule_result, api_key=None,
                               conversation_history=None, context_summary=None,
                               base_url=DEFAULT_BASE_URL, model=DEFAULT_MODEL,
                               timeout=DEFAULT_TIMEOUT):
-    """多轮对话版一站式入口：支持历史对话与上下文摘要"""
+    """多轮对话版一站式入口：返回 (回应文本, 错误信息)"""
     if not api_key:
-        return None
+        return None, "未配置 API Key"
     prompt = build_multi_turn_prompt(user_text, rule_result,
                                      conversation_history, context_summary)
     return call_llm(prompt, api_key=api_key, base_url=base_url,
