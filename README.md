@@ -14,14 +14,16 @@
 2. **求助信号识别**（是 / 否）
 3. **安全风险检测**（是 / 否）
 4. **情感强度评分**（0-100，基于词典加权）
-5. **AI 共情回应生成**（调用智谱 GLM-4-Flash，支持开关）
+5. **AI 共情回应生成**（调用智谱 GLM / DeepSeek，支持开关）
 6. **多轮对话**（连续输入，基于历史上下文生成连贯回应）
-7. **上下文感知分析**：
+7. **多模型支持**（侧边栏切换：GLM-4-Flash 免费 / GLM-4-Plus 付费 / DeepSeek-V3 付费）
+8. **API 错误透明化**（调用失败时侧边栏显示具体错误原因）
+9. **上下文感知分析**：
    - 情感趋势折线图（随时间变化可视化）
    - 风险升级检测（由无风险→有风险的自动警示）
    - 短回应情绪继承（"嗯""是的"等短句继承前文语境）
    - 连续消极情绪提示
-8. **历史会话管理**（一键新建会话，重置上下文）
+10. **历史会话管理**（一键新建会话，重置上下文）
 
 ---
 
@@ -44,7 +46,13 @@ python -m streamlit run app.py
 
 ## LLM 配置（可选）
 
-本应用默认调用 **智谱 GLM-4-Flash**（免费）。
+本应用支持多种 LLM 模型，通过侧边栏切换：
+
+| 模型 | 接口地址 | 费用 | 说明 |
+|------|----------|------|------|
+| GLM-4-Flash | `open.bigmodel.cn` | **免费** | 推荐日常使用 |
+| GLM-4-Plus | `open.bigmodel.cn` | 付费 | 效果更好 |
+| DeepSeek-V3 | `api.deepseek.com` | 付费（500万免费 token） | 另一选择 |
 
 ### 设置 API Key（任选一种）
 
@@ -59,14 +67,17 @@ export ZHIPU_API_KEY="你的智谱API密钥"
 > API Key 优先级：`ZHIPU_API_KEY` > `SILICONFLOW_API_KEY` > `OPENAI_API_KEY`
 
 **方式二：应用内侧边栏设置**
-启动后点击左侧「⚙ LLM 设置」，直接填写 API Key，无需重启。
+启动后点击左侧「设置 → 对话设置」，直接填写 API Key 并选择模型，无需重启。
 
-### 其他兼容 OpenAI 接口的模型
-修改 `llm.py` 中的 `base_url` 和 `model`：
-```python
-base_url = "https://api.siliconflow.cn/v1/chat/completions"
-model = "Qwen/Qwen2.5-7B-Instruct"
+**方式三：Streamlit Cloud Secrets**
+在 Streamlit Cloud 应用设置中添加 Secrets：
+```toml
+ZHIPU_API_KEY = "你的智谱API密钥"
 ```
+
+### API 错误处理
+- 若 API Key 无效或余额不足，侧边栏会显示红色错误提示（如 `HTTP 402: Insufficient Balance`）
+- 调用失败时自动回退到规则模型预设话术
 
 ---
 
@@ -88,13 +99,16 @@ python -m streamlit run app.py --server.headless true --server.port 8501
 ## 目录结构
 ```
 streamlit_demo/
-├── app.py           # Streamlit 主界面（多轮对话）
+├── app.py           # Streamlit 主界面（多轮对话 + 模型选择器 + API 错误显示）
 ├── conversation.py  # 多轮对话状态管理（上下文聚合/情感趋势/风险升级）
 ├── rules.py         # 规则模型（关键词提取、分类、建议话术、情感强度、上下文感知）
-├── llm.py           # LLM 调用封装（智谱 GLM / OpenAI 兼容，多轮 prompt 构建）
+├── llm.py           # LLM 调用封装（智谱 GLM / DeepSeek，多轮 prompt + few-shot 示例）
+├── config.py        # 全局配置
+├── utils.py         # 工具函数（中文字体配置）
+├── requirements.txt # 依赖声明
+├── NotoSansSC-Regular.otf  # 中文字体
 ├── README.md        # 本文件
-└── （运行时自动创建）
-    └── .streamlit/
+└── DEPLOY_README.md # 部署说明
 ```
 
 ---
@@ -136,6 +150,10 @@ streamlit_demo/
 
 > 规则模型局限：关键词覆盖有限，对隐喻、反讽等复杂表达识别不足。LLM 增强可弥补此短板。
 
+### 关键词库扩展
+- 消极关键词：170→195 个（新增"没有希望""结束一切""去死"等变体）
+- 安全风险关键词：74→89 个（新增"去死""死了算了""不如去死"等口语化表达）
+
 ---
 
 ## 多轮对话功能说明
@@ -153,9 +171,10 @@ streamlit_demo/
    - 上下文摘要自动拼接进 LLM prompt
 
 3. **LLM 多轮增强**（`llm.build_multi_turn_prompt`）：
-   - 自动携带最近 6 条历史对话（用户+助手）
+   - 自动携带最近 12 条历史对话（用户+助手）
    - 附带上下文摘要（轮次、主导情绪、风险升级、连续消极等）
-   - 要求回应更精炼（80-140 字）且保持话题连贯
+   - 朋友风格 prompt：system message 为"普通朋友微信聊天"，包含 8 个正面示例 + 7 个禁止示例
+   - 强制每次回复开头不同，避免套话；30-60 字，不超过 2 句话
 
 4. **情感趋势可视化**：对话上方实时折线图展示情感强度变化，红色标记存在安全风险的轮次
 
